@@ -14,7 +14,7 @@ class StartScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               WebSocketChannel channel = await connectToSocket(
-                "ws://127.0.0.1:8080/ws",
+                "ws://127.0.0.1:8080/join-room/6589199356204844921",
               );
               if (!context.mounted) return;
               Navigator.push(
