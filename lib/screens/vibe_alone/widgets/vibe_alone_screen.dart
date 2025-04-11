@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:westreamfrontend/constants/custom_icons.dart';
+import 'package:westreamfrontend/screens/vibe_alone/widgets/player_controller.dart';
 
-class VibeAloneScreen extends StatelessWidget {
+class VibeAloneScreen extends StatefulWidget {
   const VibeAloneScreen({super.key});
 
+  @override
+  State<VibeAloneScreen> createState() => _VibeAloneScreenState();
+}
+
+class _VibeAloneScreenState extends State<VibeAloneScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,49 +86,8 @@ class VibeAloneScreen extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: Icon(CustomIcons.shuffle),
-                    ),
-                    IconButton(
-                      onPressed: () {},
-                      icon: Icon(CustomIcons.stepBackward),
-                    ),
-                    IconButton(
-                      onPressed: () {},
-                      icon: Icon(Icons.pause_outlined),
-                    ),
-                    IconButton(
-                      onPressed: () {},
-                      icon: Icon(CustomIcons.skipForward),
-                    ),
-                    IconButton(onPressed: () {}, icon: Icon(CustomIcons.loop)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text("1:35"),
-                    ),
-                    Container(
-                      color: Colors.green,
-                      width: MediaQuery.of(context).size.width * 0.3,
-                      height: MediaQuery.of(context).size.height * 0.05,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text("4:01"),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () {},
-                      icon: Icon(CustomIcons.speaker),
-                    ),
-                    Container(
-                      color: Colors.green,
-                      width: MediaQuery.of(context).size.width * 0.1,
-                      height: MediaQuery.of(context).size.height * 0.05,
-                    ),
-                  ],
+                PlayerController(
+                  songLength: Duration(minutes: 3, seconds: 36).inSeconds,
                 ),
               ],
             ),
