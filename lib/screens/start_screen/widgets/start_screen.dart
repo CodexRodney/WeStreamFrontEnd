@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:westreamfrontend/screens/vibe_alone/widgets/vibe_alone_screen.dart';
 import 'package:westreamfrontend/screens/vibe_others/utils/sockets_connections.dart';
 import 'package:westreamfrontend/screens/vibe_others/widgets/vibe_others_screen.dart';
 
@@ -165,7 +166,14 @@ class StartScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 22.0),
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => VibeAloneScreen(),
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xffA04F51),
                     fixedSize: Size(
