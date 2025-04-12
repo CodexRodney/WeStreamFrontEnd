@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:westreamfrontend/screens/vibe_alone/widgets/vibe_alone_screen.dart';
+import 'package:westreamfrontend/screens/vibe_alone/views/vibe_alone_screen.dart';
 import 'package:westreamfrontend/screens/vibe_others/utils/sockets_connections.dart';
 import 'package:westreamfrontend/screens/vibe_others/widgets/vibe_others_screen.dart';
 

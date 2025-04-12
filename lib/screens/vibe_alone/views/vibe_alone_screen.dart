@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:westreamfrontend/constants/custom_icons.dart';
-import 'package:westreamfrontend/screens/vibe_alone/widgets/player_controller.dart';
+import 'package:westreamfrontend/models/music_model.dart';
+import 'package:westreamfrontend/screens/vibe_alone/widgets/widgets.dart';
+import 'package:westreamfrontend/utils/fetch_music.dart';
 
 class VibeAloneScreen extends StatefulWidget {
   const VibeAloneScreen({super.key});
@@ -10,6 +12,14 @@ class VibeAloneScreen extends StatefulWidget {
 }
 
 class _VibeAloneScreenState extends State<VibeAloneScreen> {
+  late Future<List<MusicModel>?> _fetchMusic;
+
+  @override
+  void initState() {
+    _fetchMusic = FetchMusic().fetchmusic();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,6 +45,39 @@ class _VibeAloneScreenState extends State<VibeAloneScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 22.0, bottom: 36.0),
                   child: Image.asset("assets/logos/logo.png", height: 40),
+                ),
+                FutureBuilder(
+                  future: _fetchMusic,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData && snapshot.data != null) {
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.6,
+                        child: ListView.builder(
+                          itemBuilder:
+                              (context, index) => Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: MusicContainer(
+                                  musicIndex: index + 1,
+                                  artist:
+                                      snapshot.data![index].artist ??
+                                      "Unknown Artist",
+                                  musicName:
+                                      snapshot.data![index].title ?? "N/A",
+                                ),
+                              ),
+                          itemCount: snapshot.data!.length,
+                        ),
+                      );
+                    } else if (snapshot.hasData && snapshot.data == null) {
+                      // TODO replace with lotti files
+                      return Text("No Music Found");
+                    } else if (snapshot.hasError) {
+                      // TODO replace with lotti files
+                      return Text(snapshot.error.toString());
+                    }
+                    // TODO replace with lotti files
+                    return CircularProgressIndicator();
+                  },
                 ),
               ],
             ),
