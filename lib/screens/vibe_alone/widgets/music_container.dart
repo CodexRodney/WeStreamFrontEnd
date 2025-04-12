@@ -8,11 +8,13 @@ class MusicContainer extends StatelessWidget {
     required this.musicIndex,
     required this.musicName,
     required this.artist,
+    required this.textcolor,
   });
 
   final int musicIndex;
   final String musicName;
   final String artist;
+  final Color textcolor;
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +22,12 @@ class MusicContainer extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(musicIndex < 10 ? "0$musicIndex" : "$musicIndex"),
+        Text(
+          musicIndex < 10 ? "0$musicIndex" : "$musicIndex",
+          style: TextStyle(color: textcolor),
+        ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          padding: const EdgeInsets.all(8.0),
           child: Container(
             height: MediaQuery.of(context).size.height * 0.08,
             width: MediaQuery.of(context).size.width * 0.05,
@@ -36,7 +41,11 @@ class MusicContainer extends StatelessWidget {
             child: Center(
               child: Text(
                 musicName[0],
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
             ),
           ),
@@ -45,8 +54,12 @@ class MusicContainer extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              musicName.length > 24 ? musicName.substring(0, 24) : musicName,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+              musicName.length > 18 ? musicName.substring(0, 18) : musicName,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: textcolor,
+              ),
               softWrap: true,
             ),
             Text(artist, style: TextStyle(color: Colors.grey), softWrap: true),

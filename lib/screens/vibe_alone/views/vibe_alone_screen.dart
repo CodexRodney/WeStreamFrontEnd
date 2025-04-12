@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:westreamfrontend/constants/custom_icons.dart';
 import 'package:westreamfrontend/models/music_model.dart';
@@ -12,12 +13,23 @@ class VibeAloneScreen extends StatefulWidget {
 }
 
 class _VibeAloneScreenState extends State<VibeAloneScreen> {
-  late Future<List<MusicModel>?> _fetchMusic;
+  late Future<List<MusicModel>?> _musicList;
+  late final AudioPlayer _player;
+  int _selectedSongPos = 0;
+  final FetchMusic _musicInst = FetchMusic();
 
   @override
   void initState() {
-    _fetchMusic = FetchMusic().fetchmusic();
+    _player = AudioPlayer();
+    _musicList = _musicInst.fetchmusic();
     super.initState();
+  }
+
+  @override
+  void dispose() async {
+    super.dispose();
+    await _player.release();
+    await _player.dispose();
   }
 
   @override
@@ -47,7 +59,7 @@ class _VibeAloneScreenState extends State<VibeAloneScreen> {
                   child: Image.asset("assets/logos/logo.png", height: 40),
                 ),
                 FutureBuilder(
-                  future: _fetchMusic,
+                  future: _musicList,
                   builder: (context, snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
                       return SizedBox(
@@ -56,13 +68,36 @@ class _VibeAloneScreenState extends State<VibeAloneScreen> {
                           itemBuilder:
                               (context, index) => Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: MusicContainer(
-                                  musicIndex: index + 1,
-                                  artist:
-                                      snapshot.data![index].artist ??
-                                      "Unknown Artist",
-                                  musicName:
-                                      snapshot.data![index].title ?? "N/A",
+                                child: TextButton(
+                                  onPressed: () async {
+                                    // stoping files with blank plays
+                                    if (snapshot.data![index].musicFile?.path ==
+                                        null) {
+                                      return;
+                                    }
+                                    // releases resources before changing song
+                                    await _player.release();
+                                    await _player.setSource(
+                                      DeviceFileSource(
+                                        snapshot.data![index].musicFile!.path,
+                                      ),
+                                    );
+                                    setState(() {
+                                      _selectedSongPos = index;
+                                    });
+                                  },
+                                  style: TextButton.styleFrom(
+                                    shape: LinearBorder(),
+                                  ),
+                                  child: MusicContainer(
+                                    musicIndex: index + 1,
+                                    artist:
+                                        snapshot.data![index].artist ??
+                                        "Unknown Artist",
+                                    musicName:
+                                        snapshot.data![index].title ?? "N/A",
+                                    textcolor: Colors.black,
+                                  ),
                                 ),
                               ),
                           itemCount: snapshot.data!.length,
@@ -129,8 +164,32 @@ class _VibeAloneScreenState extends State<VibeAloneScreen> {
                   ),
                 ),
                 const Spacer(),
-                PlayerController(
-                  songLength: Duration(minutes: 3, seconds: 36).inSeconds,
+                // TODO handle posibility of music not being loaded after decoupling playing instance
+                FutureBuilder(
+                  future: _musicList,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData && snapshot.data != null) {
+                      return PlayerController(
+                        player: _player,
+                        musicLength:
+                            _musicInst.musics[_selectedSongPos].musicSeconds ??
+                            0,
+                        musicPath:
+                            _musicInst
+                                .musics[_selectedSongPos]
+                                .musicFile
+                                ?.path ??
+                            "",
+                      );
+                    }
+                    if (snapshot.hasData && snapshot.data == null) {
+                      return Center(child: Text("No Music Loaded"));
+                    }
+                    if (snapshot.hasError) {
+                      return Center(child: Text(snapshot.error.toString()));
+                    }
+                    return Center(child: Text("Loading Music"));
+                  },
                 ),
               ],
             ),

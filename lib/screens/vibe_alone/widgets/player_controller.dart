@@ -5,22 +5,57 @@ import 'package:flutter/material.dart';
 import 'package:westreamfrontend/constants/custom_icons.dart';
 
 class PlayerController extends StatefulWidget {
-  const PlayerController({super.key, required this.songLength});
-  final int songLength;
+  const PlayerController({
+    super.key,
+    required this.musicLength,
+    required this.musicPath,
+    required this.player,
+  });
+
+  final int musicLength;
+  final String musicPath;
+  final AudioPlayer player;
 
   @override
   State<PlayerController> createState() => _PLayControllerState();
 }
 
 class _PLayControllerState extends State<PlayerController> {
-  late final AudioPlayer _player = AudioPlayer();
   Timer? _timer;
-  bool _isPlaying = false;
-  bool _isFirstTime = true;
-  bool _onLoop = false;
-  double _progressValue = 0;
-  double _volumeValue = 0.6;
-  int _songPos = 0;
+  late bool _isPlaying;
+  late bool _isFirstTime;
+  late bool _onLoop;
+  late double _progressValue;
+  late double _volumeValue;
+  late int _songPos;
+
+  @override
+  void initState() {
+    _isPlaying = false;
+    _isFirstTime = true;
+    _onLoop = false;
+    _progressValue = 0;
+    _volumeValue = 0.6;
+    _songPos = 0;
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant PlayerController oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _timer?.cancel();
+    _isPlaying = false;
+    _isFirstTime = true;
+    _progressValue = 0;
+    _songPos = 0;
+  }
+
+  @override
+  void dispose() async {
+    _timer?.cancel();
+    super.dispose();
+    await widget.player.release();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,14 +68,14 @@ class _PLayControllerState extends State<PlayerController> {
           onPressed: () async {
             if (!_isPlaying) {
               if (_isFirstTime) {
-                await _player.setSource(AssetSource('test_music/bahati.mp3'));
-                // setting player source to stop by default
-                await _player.setReleaseMode(ReleaseMode.stop);
-                _player.seek(Duration(seconds: _songPos));
+                await widget.player.setReleaseMode(
+                  _onLoop ? ReleaseMode.loop : ReleaseMode.stop,
+                );
+                widget.player.seek(Duration(seconds: _songPos));
                 _isFirstTime = false;
 
                 // setting an oncomplete listener
-                _player.onPlayerComplete.listen((event) {
+                widget.player.onPlayerComplete.listen((event) {
                   // change playing icon
                   setState(() {
                     _isPlaying = _onLoop;
@@ -52,7 +87,7 @@ class _PLayControllerState extends State<PlayerController> {
                   });
                 });
               }
-              await _player.resume();
+              await widget.player.resume();
 
               setState(() {
                 _isPlaying = !_isPlaying;
@@ -60,7 +95,7 @@ class _PLayControllerState extends State<PlayerController> {
               updateProgress();
               return;
             }
-            _player.pause();
+            widget.player.pause();
             _timer?.cancel();
             setState(() {
               _isPlaying = !_isPlaying;
@@ -78,13 +113,13 @@ class _PLayControllerState extends State<PlayerController> {
             // TODO change once you have made player available on innit
             if (_isFirstTime) return;
             if (!_onLoop) {
-              await _player.setReleaseMode(ReleaseMode.loop);
+              await widget.player.setReleaseMode(ReleaseMode.loop);
               setState(() {
                 _onLoop = true;
               });
               return;
             }
-            await _player.setReleaseMode(ReleaseMode.stop);
+            await widget.player.setReleaseMode(ReleaseMode.stop);
             setState(() {
               _onLoop = false;
             });
@@ -110,10 +145,10 @@ class _PLayControllerState extends State<PlayerController> {
             onChangeEnd: (value) async {
               setState(() {
                 _progressValue = value;
-                _songPos = (value * widget.songLength).toInt();
+                _songPos = (value * widget.musicLength).toInt();
               });
               if (!_isFirstTime) {
-                await _player.seek(Duration(seconds: _songPos));
+                await widget.player.seek(Duration(seconds: _songPos));
               }
               updateProgress();
             },
@@ -134,7 +169,7 @@ class _PLayControllerState extends State<PlayerController> {
             min: 0,
             max: 1,
             onChanged: (value) async {
-              await _player.setVolume(value);
+              await widget.player.setVolume(value);
               setState(() {
                 _volumeValue = value;
               });
@@ -148,7 +183,7 @@ class _PLayControllerState extends State<PlayerController> {
 
   void updateProgress() {
     if (!_isPlaying) return;
-    double minVal = (1 * 1) / widget.songLength;
+    double minVal = (1 * 1) / widget.musicLength;
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (_progressValue >= 0.99) {
         _timer?.cancel();
@@ -158,13 +193,5 @@ class _PLayControllerState extends State<PlayerController> {
         _progressValue += minVal;
       });
     });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _player.dispose();
-
-    super.dispose();
   }
 }
