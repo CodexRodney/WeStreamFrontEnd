@@ -5,7 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:westreamfrontend/screens/start_screen/widgets/services/room_services.dart';
+import 'package:westreamfrontend/screens/start_screen/services/room_services.dart';
 import 'package:westreamfrontend/screens/vibe_others/models/chat_model.dart';
 import 'package:westreamfrontend/screens/vibe_others/providers/chats_provider.dart';
 import 'package:westreamfrontend/screens/vibe_others/providers/music_streamer_provider.dart';

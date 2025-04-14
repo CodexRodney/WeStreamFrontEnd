@@ -2,7 +2,7 @@
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:westreamfrontend/screens/start_screen/widgets/services/base_services.dart';
+import 'package:westreamfrontend/screens/start_screen/services/base_services.dart';
 
 class VibersService {
   static Future<Map<String, dynamic>> getViberId() async {

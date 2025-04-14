@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:westreamfrontend/screens/start_screen/widgets/services/room_services.dart';
-import 'package:westreamfrontend/screens/start_screen/widgets/services/vibers_services.dart';
+import 'package:westreamfrontend/screens/start_screen/services/room_services.dart';
+import 'package:westreamfrontend/screens/start_screen/services/vibers_services.dart';
 import 'package:westreamfrontend/screens/vibe_alone/views/vibe_alone_screen.dart';
 import 'package:westreamfrontend/screens/vibe_others/widgets/vibe_others_screen.dart';
 
