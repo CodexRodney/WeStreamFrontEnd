@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:westreamfrontend/screens/start_screen/widgets/services/room_services.dart';
+import 'package:westreamfrontend/screens/start_screen/widgets/services/vibers_services.dart';
 import 'package:westreamfrontend/screens/vibe_alone/views/vibe_alone_screen.dart';
-import 'package:westreamfrontend/screens/vibe_others/utils/sockets_connections.dart';
 import 'package:westreamfrontend/screens/vibe_others/widgets/vibe_others_screen.dart';
 
 class StartScreen extends StatelessWidget {
@@ -109,12 +110,21 @@ class StartScreen extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: () async {
                           if (!formKey.currentState!.validate()) return;
-                          WebSocketChannel channel = await connectToSocket(
-                            "ws://127.0.0.1:8080/join-room/${roomCodeController.text.trim()}",
-                          );
-                          WebSocketChannel musicChannel = await connectToSocket(
-                            "ws://127.0.0.1:8080/stream-room-music/${roomCodeController.text.trim()}",
-                          );
+                          // get user id
+                          var response = await VibersService.getViberId();
+                          String viberId = response["viber_id"];
+
+                          // join room, isAdmin false since user not creating room
+                          WebSocketChannel roomChannel =
+                              await RoomsService.joinRoom(
+                                roomCodeController.text.trim(),
+                                viberId,
+                                false,
+                              );
+
+                          // join music stream
+                          WebSocketChannel musicChannel =
+                              await RoomsService.joinMusicRoomChannel(viberId);
 
                           if (!context.mounted) return;
                           Navigator.push(
@@ -122,7 +132,8 @@ class StartScreen extends StatelessWidget {
                             MaterialPageRoute(
                               builder:
                                   (context) => VibeOthersScreen(
-                                    channel: channel,
+                                    roomId: roomCodeController.text.trim(),
+                                    channel: roomChannel,
                                     musicChannel: musicChannel,
                                   ),
                             ),
@@ -148,7 +159,39 @@ class StartScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () async {
+                          // create room
+                          var response = await RoomsService.createRoom();
+                          String roomId = response["Id"];
+
+                          // get user id
+                          response = await VibersService.getViberId();
+                          String viberId = response["viber_id"];
+
+                          // join room, isAdmin is True since user is creating room
+                          WebSocketChannel roomChannel =
+                              await RoomsService.joinRoom(
+                                roomId,
+                                viberId,
+                                true,
+                              );
+
+                          // join music stream
+                          WebSocketChannel musicChannel =
+                              await RoomsService.joinMusicRoomChannel(viberId);
+                          if (!context.mounted) return;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => VibeOthersScreen(
+                                    roomId: roomId,
+                                    channel: roomChannel,
+                                    musicChannel: musicChannel,
+                                  ),
+                            ),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xff00C699),
                           fixedSize: Size(210, 59),
