@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:westreamfrontend/screens/start_screen/widgets/start_screen.dart';
 import 'package:westreamfrontend/screens/vibe_others/providers/chats_provider.dart';
+import 'package:westreamfrontend/screens/vibe_others/providers/music_streamer_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +15,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (context) => ChatsProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (context) => ChatsProvider()),
+        ChangeNotifierProvider(create: (context) => MusicStreamerProvider()),
+      ],
+
       child: MaterialApp(
         title: 'Flutter Demo',
         theme: ThemeData(

@@ -112,13 +112,19 @@ class StartScreen extends StatelessWidget {
                           WebSocketChannel channel = await connectToSocket(
                             "ws://127.0.0.1:8080/join-room/${roomCodeController.text.trim()}",
                           );
+                          WebSocketChannel musicChannel = await connectToSocket(
+                            "ws://127.0.0.1:8080/stream-room-music/${roomCodeController.text.trim()}",
+                          );
+
                           if (!context.mounted) return;
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder:
-                                  (context) =>
-                                      VibeOthersScreen(channel: channel),
+                                  (context) => VibeOthersScreen(
+                                    channel: channel,
+                                    musicChannel: musicChannel,
+                                  ),
                             ),
                           );
                         },
