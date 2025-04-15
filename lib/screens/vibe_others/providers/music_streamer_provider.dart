@@ -16,6 +16,7 @@ class MusicStreamerProvider with ChangeNotifier {
     await audioPlayer.setSource(BytesSource(Uint8List.fromList(musicBytes)));
     // set last seconds after setting player source will used later to help in seeking
     Duration? lastSecDur = await audioPlayer.getDuration();
+    print("Last Seconds duration before getting seconds Is $lastSecDur");
     lastSeconds = lastSecDur?.inSeconds ?? 0;
     print("Last Seconds were: $lastSeconds");
     // set last music bytes
@@ -37,21 +38,3 @@ class MusicStreamerProvider with ChangeNotifier {
     notifyListeners();
   }
 }
-
-// class MyCustomSource extends StreamAudioSource {
-//   final List<int> bytes;
-//   MyCustomSource(this.bytes);
-
-//   @override
-//   Future<StreamAudioResponse> request([int? start, int? end]) async {
-//     start ??= 0;
-//     end ??= bytes.length;
-//     return StreamAudioResponse(
-//       sourceLength: bytes.length,
-//       contentLength: end - start,
-//       offset: start,
-//       stream: Stream.value(bytes.sublist(start, end)),
-//       contentType: 'audio/mpeg',
-//     );
-//   }
-// }

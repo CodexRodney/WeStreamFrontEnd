@@ -15,13 +15,17 @@ class VibeOthersScreen extends StatefulWidget {
   const VibeOthersScreen({
     super.key,
     required this.roomId,
+    required this.viberId,
     required this.channel,
     required this.musicChannel,
+    required this.isAdmin,
   });
 
   final String roomId;
+  final String viberId;
   final WebSocketChannel channel;
   final WebSocketChannel musicChannel;
+  final bool isAdmin;
 
   @override
   State<VibeOthersScreen> createState() => _VibeOthersScreenState();
@@ -33,6 +37,7 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
 
   @override
   void initState() {
+    super.initState();
     // _setMusicSource = context.read<MusicStreamerProvider>().setMusicSource();
     widget.channel.stream.listen((event) {
       if (!mounted) {
@@ -42,14 +47,14 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
         ChatModel(message: event, isReceived: true),
       );
     });
-    // listening to music streamer
-    // widget.musicChannel.stream.listen((event) {
-    //   if (!mounted) {
-    //     return;
-    //   }
-    //   context.read<MusicStreamerProvider>().updateMusicFromStream(event);
-    // });
-    super.initState();
+
+    // start listening on music streamer upon entering
+    widget.musicChannel.stream.listen((event) {
+      if (!mounted) {
+        return;
+      }
+      context.read<MusicStreamerProvider>().updateMusicFromStream(event);
+    });
   }
 
   @override
@@ -252,56 +257,60 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
                         builder:
                             (context, value, child) =>
                                 value.musicBytes.isEmpty
-                                    ? Column(
-                                      children: [
-                                        Text("Start Listening On Stream"),
-                                        IconButton(
-                                          onPressed: () {
-                                            // listening to music streamer
-                                            widget.musicChannel.stream.listen((
-                                              event,
-                                            ) async {
-                                              if (!context.mounted) {
-                                                return;
-                                              }
-                                              await context
-                                                  .read<MusicStreamerProvider>()
-                                                  .updateMusicFromStream(event);
-                                            }, onDone: () => print("Done"));
-
-                                            // listening to music player
-                                            // setting an oncomplete listener
-                                            value.audioPlayer.onPlayerComplete.listen((
-                                              event,
-                                            ) async {
-                                              // first check current music bytes and last music bytes set
-                                              // then load more if there exists more
-                                              if (value.musicBytes.length <=
-                                                  value.lastMusicBytesSize) {
-                                                print(
-                                                  "No more music to stream",
+                                    ? widget.isAdmin
+                                        ? Column(
+                                          children: [
+                                            Text("Start Listening On Stream"),
+                                            IconButton(
+                                              onPressed: () {
+                                                print("Pressed");
+                                                // send message to start music stream
+                                                widget.musicChannel.sink.add(
+                                                  "play",
                                                 );
-                                                return;
-                                              }
-                                              // last played seconds before new set
-                                              int secs = value.lastSeconds;
+                                                print("message sent");
+                                                // listening to music player
+                                                // setting an oncomplete listener
+                                                value.audioPlayer.onPlayerComplete.listen((
+                                                  event,
+                                                ) async {
+                                                  // first check current music bytes and last music bytes set
+                                                  // then load more if there exists more
+                                                  if (value.musicBytes.length <=
+                                                      value
+                                                          .lastMusicBytesSize) {
+                                                    print(
+                                                      "No more music to stream",
+                                                    );
+                                                    return;
+                                                  }
+                                                  // last played seconds before new set
+                                                  int secs = value.lastSeconds;
 
-                                              // first release resources to save memory
-                                              await value.audioPlayer.release();
+                                                  // first release resources to save memory
+                                                  await value.audioPlayer
+                                                      .release();
 
-                                              // set music source again
-                                              await value.setMusicSource();
-                                              // seek to last play
-                                              await value.audioPlayer.seek(
-                                                Duration(seconds: secs),
-                                              );
-                                              await value.audioPlayer.resume();
-                                            });
-                                          },
-                                          icon: Icon(Icons.play_arrow),
-                                        ),
-                                      ],
-                                    )
+                                                  if (!mounted) return;
+                                                  // set music source again
+                                                  await value.setMusicSource();
+
+                                                  if (!mounted) return;
+                                                  // seek to last play
+                                                  await value.audioPlayer.seek(
+                                                    Duration(seconds: secs),
+                                                  );
+
+                                                  if (!mounted) return;
+                                                  await value.audioPlayer
+                                                      .resume();
+                                                });
+                                              },
+                                              icon: Icon(Icons.play_arrow),
+                                            ),
+                                          ],
+                                        )
+                                        : Text("Enjoy Stream")
                                     : SizedBox(
                                       child: IconButton(
                                         onPressed: () async {

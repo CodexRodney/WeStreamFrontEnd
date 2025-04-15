@@ -133,6 +133,8 @@ class StartScreen extends StatelessWidget {
                               builder:
                                   (context) => VibeOthersScreen(
                                     roomId: roomCodeController.text.trim(),
+                                    viberId: viberId,
+                                    isAdmin: false,
                                     channel: roomChannel,
                                     musicChannel: musicChannel,
                                   ),
@@ -186,6 +188,8 @@ class StartScreen extends StatelessWidget {
                               builder:
                                   (context) => VibeOthersScreen(
                                     roomId: roomId,
+                                    viberId: viberId,
+                                    isAdmin: true,
                                     channel: roomChannel,
                                     musicChannel: musicChannel,
                                   ),
