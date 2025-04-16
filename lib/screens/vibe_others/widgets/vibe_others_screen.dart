@@ -1,15 +1,20 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:westreamfrontend/screens/start_screen/services/room_services.dart';
 import 'package:westreamfrontend/screens/vibe_others/models/chat_model.dart';
+import 'package:westreamfrontend/screens/vibe_others/models/viber_model.dart';
 import 'package:westreamfrontend/screens/vibe_others/providers/chats_provider.dart';
 import 'package:westreamfrontend/screens/vibe_others/providers/music_streamer_provider.dart';
+import 'package:westreamfrontend/screens/vibe_others/providers/viber_provider.dart';
 import 'package:westreamfrontend/screens/vibe_others/widgets/chat_widget.dart';
+import 'package:westreamfrontend/screens/vibe_others/widgets/user_presentation.dart';
 
 class VibeOthersScreen extends StatefulWidget {
   const VibeOthersScreen({
@@ -18,13 +23,17 @@ class VibeOthersScreen extends StatefulWidget {
     required this.viberId,
     required this.channel,
     required this.musicChannel,
+    required this.eventChannel,
     required this.isAdmin,
+    required this.username,
   });
 
   final String roomId;
   final String viberId;
+  final String username;
   final WebSocketChannel channel;
   final WebSocketChannel musicChannel;
+  final WebSocketChannel eventChannel;
   final bool isAdmin;
 
   @override
@@ -33,6 +42,9 @@ class VibeOthersScreen extends StatefulWidget {
 
 class _VibeOthersScreenState extends State<VibeOthersScreen> {
   final TextEditingController _sendMessageController = TextEditingController();
+  ValueNotifier<Widget> adminWidgetNotifier = ValueNotifier<Widget>(
+    SizedBox.shrink(),
+  );
   // late final Future<void> _setMusicSource;
 
   @override
@@ -55,6 +67,55 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
       }
       context.read<MusicStreamerProvider>().updateMusicFromStream(event);
     });
+
+    // communicate to others about joining, if not admin
+    // admin doesn't communicate since they are first to join
+    if (!widget.isAdmin) widget.eventChannel.sink.add("joining");
+
+    // start listening on music streamer upon entering
+    widget.eventChannel.stream.listen((event) {
+      if (!mounted) {
+        return;
+      }
+      Map<String, dynamic> message = jsonDecode(event);
+      for (String key in message.keys) {
+        // adding only one viber
+        if (key.compareTo("viber_join") == 0) {
+          ViberModel viber = ViberModel.fromJson(message[key]);
+          if (viber.isAdmin) {
+            // updating admin side
+            adminWidgetNotifier.value = Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Admin"),
+                UserPresentationWidget(username: viber.username),
+              ],
+            );
+          } else {
+            context.read<VibersProvider>().updateVibers(viber);
+          }
+        }
+        if (key.compareTo("vibers") == 0) {
+          for (var v in message[key]) {
+            ViberModel viber = ViberModel.fromJson(v);
+            if (viber.isAdmin) {
+              // updating admin side
+              adminWidgetNotifier.value = Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Admin"),
+                  UserPresentationWidget(username: viber.username),
+                ],
+              );
+            } else {
+              context.read<VibersProvider>().updateVibers(viber);
+            }
+          }
+        }
+      }
+    });
   }
 
   @override
@@ -63,7 +124,7 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
       body: Column(
         children: [
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.9,
+            height: MediaQuery.of(context).size.height,
             child: Row(
               children: [
                 SizedBox(
@@ -88,25 +149,32 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
                         child: Image.asset("assets/logos/logo.png", height: 40),
                       ),
                       Text("😎", style: TextStyle(fontSize: 40)),
-                      RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: "Room Code: ",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xffA04F51),
+                      TextButton(
+                        onPressed: () async {
+                          await Clipboard.setData(
+                            ClipboardData(text: widget.roomId),
+                          );
+                        },
+                        child: RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: "Room Code: ",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xffA04F51),
+                                ),
                               ),
-                            ),
-                            TextSpan(
-                              text: widget.roomId,
-                              style: TextStyle(
-                                color: Color(0xff00C699),
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                              TextSpan(
+                                text: widget.roomId,
+                                style: TextStyle(
+                                  color: Color(0xff00C699),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       Padding(
@@ -320,6 +388,75 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
                                         icon: Icon(Icons.play_arrow),
                                       ),
                                     ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        height: MediaQuery.of(context).size.height * 0.13,
+                        color: Color(0xffE9EEB3),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            widget.isAdmin
+                                ? Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("Admin"),
+                                    UserPresentationWidget(
+                                      username: widget.username,
+                                    ),
+                                  ],
+                                )
+                                : ValueListenableBuilder(
+                                  valueListenable: adminWidgetNotifier,
+                                  builder:
+                                      (context, value, child) =>
+                                          adminWidgetNotifier.value,
+                                ),
+                            Column(
+                              children: [
+                                Text("Others"),
+                                Row(
+                                  children: [
+                                    !widget.isAdmin
+                                        ? UserPresentationWidget(
+                                          username: widget.username,
+                                        )
+                                        : SizedBox.shrink(),
+                                    SizedBox(
+                                      width:
+                                          MediaQuery.of(context).size.width *
+                                          0.25,
+                                      height:
+                                          MediaQuery.of(context).size.height *
+                                          0.1,
+                                      child: Consumer<VibersProvider>(
+                                        builder:
+                                            (
+                                              context,
+                                              value,
+                                              child,
+                                            ) => ListView.builder(
+                                              scrollDirection: Axis.horizontal,
+                                              itemBuilder:
+                                                  (context, index) =>
+                                                      UserPresentationWidget(
+                                                        username:
+                                                            value
+                                                                .vibers[index]
+                                                                .username,
+                                                      ),
+                                              itemCount: value.vibers.length,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

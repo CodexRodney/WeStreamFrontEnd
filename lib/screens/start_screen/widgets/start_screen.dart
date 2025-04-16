@@ -108,10 +108,13 @@ class StartScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: ElevatedButton(
+                        // used to join a  room
                         onPressed: () async {
                           if (!formKey.currentState!.validate()) return;
                           // get user id
-                          var response = await VibersService.getViberId();
+                          var response = await VibersService.getViberId(
+                            usernameController.text.trim(),
+                          );
                           String viberId = response["viber_id"];
 
                           // join room, isAdmin false since user not creating room
@@ -126,17 +129,30 @@ class StartScreen extends StatelessWidget {
                           WebSocketChannel musicChannel =
                               await RoomsService.joinMusicRoomChannel(viberId);
 
+                          // join event channel
+                          WebSocketChannel eventChannel =
+                              await RoomsService.joinEventRoomChannel(viberId);
+
+                          String roomId = roomCodeController.text.trim();
+                          String username = usernameController.text.trim();
+
+                          // clearing form
+                          roomCodeController.clear();
+                          usernameController.clear();
+
                           if (!context.mounted) return;
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder:
                                   (context) => VibeOthersScreen(
-                                    roomId: roomCodeController.text.trim(),
+                                    roomId: roomId,
                                     viberId: viberId,
                                     isAdmin: false,
                                     channel: roomChannel,
                                     musicChannel: musicChannel,
+                                    eventChannel: eventChannel,
+                                    username: username,
                                   ),
                             ),
                           );
@@ -161,13 +177,23 @@ class StartScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: ElevatedButton(
+                        // used to create a room
                         onPressed: () async {
+                          // avoiding telling admin to enter room code
+                          roomCodeController.text = "kkk";
+                          if (!formKey.currentState!.validate()) {
+                            roomCodeController.clear();
+                            return;
+                          }
+                          roomCodeController.clear();
                           // create room
                           var response = await RoomsService.createRoom();
                           String roomId = response["Id"];
 
                           // get user id
-                          response = await VibersService.getViberId();
+                          response = await VibersService.getViberId(
+                            usernameController.text.trim(),
+                          );
                           String viberId = response["viber_id"];
 
                           // join room, isAdmin is True since user is creating room
@@ -181,7 +207,14 @@ class StartScreen extends StatelessWidget {
                           // join music stream
                           WebSocketChannel musicChannel =
                               await RoomsService.joinMusicRoomChannel(viberId);
+
+                          // join event channel
+                          WebSocketChannel eventChannel =
+                              await RoomsService.joinEventRoomChannel(viberId);
+
                           if (!context.mounted) return;
+                          String username = usernameController.text.trim();
+                          usernameController.clear();
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -189,9 +222,11 @@ class StartScreen extends StatelessWidget {
                                   (context) => VibeOthersScreen(
                                     roomId: roomId,
                                     viberId: viberId,
+                                    username: username,
                                     isAdmin: true,
                                     channel: roomChannel,
                                     musicChannel: musicChannel,
+                                    eventChannel: eventChannel,
                                   ),
                             ),
                           );

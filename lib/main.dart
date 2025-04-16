@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:westreamfrontend/screens/start_screen/widgets/start_screen.dart';
 import 'package:westreamfrontend/screens/vibe_others/providers/chats_provider.dart';
 import 'package:westreamfrontend/screens/vibe_others/providers/music_streamer_provider.dart';
+import 'package:westreamfrontend/screens/vibe_others/providers/viber_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,6 +19,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => ChatsProvider()),
         ChangeNotifierProvider(create: (context) => MusicStreamerProvider()),
+        ChangeNotifierProvider(create: (context) => VibersProvider()),
       ],
 
       child: MaterialApp(

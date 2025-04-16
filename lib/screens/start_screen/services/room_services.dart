@@ -79,4 +79,20 @@ class RoomsService {
       rethrow;
     }
   }
+
+  static Future<WebSocketChannel> joinEventRoomChannel(String viberId) async {
+    try {
+      final WebSocketChannel channel = WebSocketChannel.connect(
+        Uri.parse('${BaseServices.wsUrl}/join-event-channel/$viberId'),
+      );
+      await channel.ready;
+      return channel;
+    } on SocketException {
+      // Handle the exception.
+      rethrow;
+    } on WebSocketChannelException {
+      // Handle the exception.
+      rethrow;
+    }
+  }
 }

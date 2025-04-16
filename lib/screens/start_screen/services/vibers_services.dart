@@ -5,9 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:westreamfrontend/screens/start_screen/services/base_services.dart';
 
 class VibersService {
-  static Future<Map<String, dynamic>> getViberId() async {
+  static Future<Map<String, dynamic>> getViberId(String username) async {
     var response = await http.get(
-      Uri.parse("${BaseServices.baseUrl}/get-viber"),
+      Uri.parse("${BaseServices.baseUrl}/get-viber/$username"),
       headers: BaseServices.headers,
     );
     if (response.statusCode >= 200 && response.statusCode < 299) {
