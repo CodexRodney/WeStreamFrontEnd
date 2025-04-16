@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:westreamfrontend/screens/start_screen/services/room_services.dart';
 import 'package:westreamfrontend/screens/vibe_others/models/chat_model.dart';
+import 'package:westreamfrontend/screens/vibe_others/models/music_model.dart';
 import 'package:westreamfrontend/screens/vibe_others/models/viber_model.dart';
 import 'package:westreamfrontend/screens/vibe_others/providers/chats_provider.dart';
 import 'package:westreamfrontend/screens/vibe_others/providers/music_streamer_provider.dart';
@@ -114,8 +115,23 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
             }
           }
         }
+        if (key.compareTo("added_music") == 0) {
+          print(message[key]);
+          context.read<MusicStreamerProvider>().updateAddedMusics(message[key]);
+
+          print("There");
+        }
       }
     });
+  }
+
+  @override
+  void dispose() async {
+    _sendMessageController.dispose();
+    super.dispose();
+    await widget.channel.sink.close();
+    await widget.musicChannel.sink.close();
+    await widget.eventChannel.sink.close();
   }
 
   @override
@@ -135,7 +151,36 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
                       Align(
                         alignment: Alignment.topLeft,
                         child: IconButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () async {
+                            // dispose music player when one exits rooms
+                            // first check if it is set
+                            if (context
+                                .read<MusicStreamerProvider>()
+                                .musicBytes
+                                .isNotEmpty) {
+                              await context
+                                  .read<MusicStreamerProvider>()
+                                  .audioPlayer
+                                  .dispose();
+                            }
+                            // clear chats, musicbytes and vibers
+                            if (!context.mounted) return;
+                            context
+                                .read<MusicStreamerProvider>()
+                                .musicBytes
+                                .clear();
+                            context
+                                .read<MusicStreamerProvider>()
+                                .musicsAdded
+                                .clear();
+                            context
+                                .read<MusicStreamerProvider>()
+                                .musicTableRow
+                                .clear();
+                            context.read<ChatsProvider>().chats.clear();
+                            context.read<VibersProvider>().vibers.clear();
+                            Navigator.pop(context);
+                          },
                           icon: Icon(Icons.arrow_back_rounded),
                         ),
                       ),
@@ -182,143 +227,6 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
                         child: Text(
                           "Share Room Code To Others To Join👆🔝",
                           style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(0, 22.0, 16.0, 22.0),
-                        child: Align(
-                          alignment: Alignment.topRight,
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              try {
-                                FilePickerResult? result =
-                                    await FilePicker.platform.pickFiles();
-
-                                if (result != null) {
-                                  File musicFile = File(
-                                    result.files.single.path!,
-                                  );
-                                  // get music file metadata
-                                  AudioMetadata metadata = readMetadata(
-                                    musicFile,
-                                    getImage: false,
-                                  );
-                                  Map<String, String> requestBody = {
-                                    "title": metadata.title ?? "N/A",
-                                    "duration_seconds":
-                                        metadata.duration?.inSeconds
-                                            .toString() ??
-                                        "0",
-                                    "artist":
-                                        metadata.artist ?? "Unknown Artist",
-                                    "room_id": widget.roomId,
-                                  };
-
-                                  // upload to music room
-                                  await RoomsService.uploadMusicToRoom(
-                                    requestBody,
-                                    musicFile,
-                                  );
-                                }
-                                // showing successful snackbar
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Center(
-                                      child: Text(
-                                        "Musicc Successfully Uploaded",
-                                        style: const TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ),
-                                    padding: const EdgeInsets.all(8.0),
-                                    elevation: 20,
-                                    shape: const OutlineInputBorder(
-                                      borderSide: BorderSide.none,
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(12),
-                                      ),
-                                    ),
-                                    duration: const Duration(seconds: 3),
-                                    behavior: SnackBarBehavior.floating,
-                                    margin: EdgeInsets.only(
-                                      bottom:
-                                          MediaQuery.of(context).size.height *
-                                          0.95,
-                                      right:
-                                          MediaQuery.of(context).size.width *
-                                          0.35,
-                                      left:
-                                          MediaQuery.of(context).size.width *
-                                          0.35,
-                                    ),
-                                  ),
-                                );
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Center(
-                                      child: Text(
-                                        e.toString(),
-                                        style: const TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ),
-                                    padding: const EdgeInsets.all(8.0),
-                                    elevation: 20,
-                                    shape: const OutlineInputBorder(
-                                      borderSide: BorderSide.none,
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(12),
-                                      ),
-                                    ),
-                                    duration: const Duration(seconds: 3),
-                                    behavior: SnackBarBehavior.floating,
-                                    margin: EdgeInsets.only(
-                                      bottom:
-                                          MediaQuery.of(context).size.height *
-                                          0.95,
-                                      right:
-                                          MediaQuery.of(context).size.width *
-                                          0.35,
-                                      left:
-                                          MediaQuery.of(context).size.width *
-                                          0.35,
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xff00C699),
-                              fixedSize: Size(180, 45),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(12),
-                                ),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                Icon(Icons.add, color: Colors.black),
-                                Text(
-                                  "Add A Track",
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ],
-                            ),
-                          ),
                         ),
                       ),
                       Consumer<MusicStreamerProvider>(
@@ -387,6 +295,165 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
                                         },
                                         icon: Icon(Icons.play_arrow),
                                       ),
+                                    ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 22.0, 16.0, 22.0),
+                        child: Align(
+                          alignment: Alignment.topRight,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              try {
+                                FilePickerResult? result =
+                                    await FilePicker.platform.pickFiles();
+
+                                if (result != null) {
+                                  File musicFile = File(
+                                    result.files.single.path!,
+                                  );
+                                  // get music file metadata
+                                  AudioMetadata metadata = readMetadata(
+                                    musicFile,
+                                    getImage: false,
+                                  );
+                                  Map<String, String> requestBody = {
+                                    "title": metadata.title ?? "N/A",
+                                    "duration_seconds":
+                                        metadata.duration?.inSeconds
+                                            .toString() ??
+                                        "0",
+                                    "artist":
+                                        metadata.artist ?? "Unknown Artist",
+                                    "viber_id": widget.viberId,
+                                  };
+
+                                  // upload to music room
+                                  await RoomsService.uploadMusicToRoom(
+                                    requestBody,
+                                    musicFile,
+                                  );
+                                  if (!context.mounted) return;
+                                  context
+                                      .read<MusicStreamerProvider>()
+                                      .updateAddedMusics({
+                                        "title": metadata.title ?? "N/A",
+                                        "durationInSecs":
+                                            metadata.duration?.inSeconds ?? 0,
+                                        "artist":
+                                            metadata.artist ?? "Unknown Artist",
+                                        "addedBy": widget.username,
+                                      });
+                                  print("here");
+                                }
+                                // showing successful snackbar
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Center(
+                                      child: Text(
+                                        "Musicc Successfully Uploaded",
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                    padding: const EdgeInsets.all(8.0),
+                                    elevation: 20,
+                                    shape: const OutlineInputBorder(
+                                      borderSide: BorderSide.none,
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(12),
+                                      ),
+                                    ),
+                                    duration: const Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                    margin: EdgeInsets.only(
+                                      bottom:
+                                          MediaQuery.of(context).size.height *
+                                          0.95,
+                                      right:
+                                          MediaQuery.of(context).size.width *
+                                          0.35,
+                                      left:
+                                          MediaQuery.of(context).size.width *
+                                          0.35,
+                                    ),
+                                  ),
+                                );
+                              } catch (e) {
+                                // unsuccessful upload of song
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Center(
+                                      child: Text(
+                                        e.toString(),
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                    padding: const EdgeInsets.all(8.0),
+                                    elevation: 20,
+                                    shape: const OutlineInputBorder(
+                                      borderSide: BorderSide.none,
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(12),
+                                      ),
+                                    ),
+                                    duration: const Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                    margin: EdgeInsets.only(
+                                      bottom:
+                                          MediaQuery.of(context).size.height *
+                                          0.95,
+                                      right:
+                                          MediaQuery.of(context).size.width *
+                                          0.35,
+                                      left:
+                                          MediaQuery.of(context).size.width *
+                                          0.35,
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xff00C699),
+                              fixedSize: Size(180, 45),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(12),
+                                ),
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Icon(Icons.add, color: Colors.black),
+                                Text(
+                                  "Add A Track",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Consumer<MusicStreamerProvider>(
+                        builder:
+                            (context, value, child) =>
+                                value.musicsAdded.isNotEmpty
+                                    ? Table(children: value.musicTableRow)
+                                    : Expanded(
+                                      child: Text("No Music Added Yet"),
                                     ),
                       ),
                       const Spacer(),
@@ -540,10 +607,39 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    widget.channel.sink.close();
-    _sendMessageController.dispose();
-    super.dispose();
+  TableRow musicPres(String title, String artist, String addedBy) {
+    return TableRow(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 8.0),
+              height: MediaQuery.of(context).size.height * 0.08,
+              width: MediaQuery.of(context).size.width * 0.08,
+              color: Colors.red,
+              child: Center(
+                child: Text(
+                  title[0].toUpperCase(),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(title, style: TextStyle(fontSize: 16)),
+            ),
+          ],
+        ),
+        TableCell(
+          verticalAlignment: TableCellVerticalAlignment.middle,
+          child: Text(artist, style: TextStyle(fontSize: 16)),
+        ),
+        TableCell(
+          verticalAlignment: TableCellVerticalAlignment.middle,
+          child: Text(addedBy, style: TextStyle(fontSize: 16)),
+        ),
+      ],
+    );
   }
 }

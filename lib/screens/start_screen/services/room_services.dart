@@ -41,6 +41,8 @@ class RoomsService {
     if (response.statusCode >= 200 && response.statusCode < 299) {
       return jsonDecode(responseBody);
     }
+    print(response.statusCode);
+    print(jsonDecode(responseBody));
     throw "Something Went Wrong";
   }
 
