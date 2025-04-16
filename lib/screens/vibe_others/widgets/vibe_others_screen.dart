@@ -71,7 +71,10 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
 
     // communicate to others about joining, if not admin
     // admin doesn't communicate since they are first to join
-    if (!widget.isAdmin) widget.eventChannel.sink.add("joining");
+    if (!widget.isAdmin) {
+      widget.eventChannel.sink.add("joining");
+      widget.eventChannel.sink.add("get_musics");
+    }
 
     // start listening on music streamer upon entering
     widget.eventChannel.stream.listen((event) {
@@ -116,10 +119,13 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
           }
         }
         if (key.compareTo("added_music") == 0) {
-          print(message[key]);
           context.read<MusicStreamerProvider>().updateAddedMusics(message[key]);
+        }
 
-          print("There");
+        if (key.compareTo("get_musics") == 0) {
+          for (var v in message[key]) {
+            context.read<MusicStreamerProvider>().updateAddedMusics(v);
+          }
         }
       }
     });
@@ -152,6 +158,7 @@ class _VibeOthersScreenState extends State<VibeOthersScreen> {
                         alignment: Alignment.topLeft,
                         child: IconButton(
                           onPressed: () async {
+                            // EXIT BUTTON
                             // dispose music player when one exits rooms
                             // first check if it is set
                             if (context
