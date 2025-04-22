@@ -1,16 +1,34 @@
-# westreamfrontend
+# 🎵 Westream – Real-Time Collaborative Music Streaming
 
-A new Flutter project.
+Westream is a real-time music streaming platform that lets users join virtual rooms, listen to the same music together, contribute to shared playlists, and interact through live comments. The platform also includes an offline mode that functions as a standalone music player. Built to explore real-time communication and networking, Westream leverages socket programming, concurrency, and synchronization principles.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🚀 Features
 
-A few resources to get you started if this is your first Flutter project:
+- **Real-Time Listening Rooms**  
+  Join or create rooms to listen to the same track in perfect sync with others.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **Collaborative Playlists**  
+  Add and reorder tracks in a shared playlist—crowdsource the vibe!
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- **Live Comments & Reactions**  
+  Share feedback and interact with listeners while the music plays.
+
+- **Offline Music Mode**  
+  Download tracks and use Westream as your personal music player even without an internet connection.
+
+- **Socket-Based Communication**  
+  Built using sockets to handle real-time data transfer and synchronization among clients.
+
+---
+
+## 🧠 Project Motivation
+
+This project was developed to gain hands-on experience with **socket programming** and explore the challenges of building a real-time streaming system. Key focus areas include:
+
+- Managing **concurrent users** across rooms
+- Handling **synchronization** of music playback
+- Implementing **multi-threaded** processes for responsiveness
+- Ensuring **real-time chat and control actions** using sockets
+
